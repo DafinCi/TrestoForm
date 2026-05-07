@@ -1,5 +1,6 @@
 import { Inter, Righteous } from "next/font/google";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import "./globals.css";
 
 const inter = Inter({
   subsets: ["latin"],
