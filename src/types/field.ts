@@ -8,15 +8,23 @@ export type FieldType =
   | "url";
 
 export interface FormField {
-  id: string;
+  id: string; // Pastikan nanti pakai UUID/crypto.randomUUID()
   type: FieldType;
   label: string;
+  description?: string; // Tambahan: Biar UI-nya bisa kasih teks bantuan kecil
   placeholder?: string;
-  required?: boolean;
+  required: boolean; // Bikin required non-opsional dengan default false aja, biar Zod gampang
 
-  options?: string[];
+  options?: string[]; // Khusus buat select/checkbox
 
-  isSensitive?: boolean;
+  // Privacy & Walrus/Seal Specific
+  isSensitive: boolean; // Default false
+  publicVisible: boolean; // Default true
 
-  publicVisible?: boolean;
+  // Tambahan: Buat bekal Zod Validation nanti
+  validation?: {
+    min?: number;
+    max?: number;
+    maxFileSize?: number; // Khusus file upload ke Walrus
+  };
 }
