@@ -1,5 +1,6 @@
 import { Inter, Righteous } from "next/font/google";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { Web3Provider } from "@/components/providers/web3-provider"; // <-- Import Provider baru
 import "./globals.css";
 
 const inter = Inter({
@@ -21,7 +22,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.variable} ${righteous.variable} antialiased`}>
-        <TooltipProvider>{children}</TooltipProvider>
+        {/* Bungkus seluruh aplikasi dengan Web3Provider */}
+        <Web3Provider>
+          <TooltipProvider>{children}</TooltipProvider>
+        </Web3Provider>
       </body>
     </html>
   );
