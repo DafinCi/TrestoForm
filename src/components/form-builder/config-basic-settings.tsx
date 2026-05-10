@@ -3,6 +3,7 @@
 import React from "react";
 import { Asterisk } from "lucide-react";
 import { FormField } from "@/types/field";
+import { DebouncedInput, DebouncedTextarea } from "./debounced-input";
 
 interface Props {
   field: FormField;
@@ -17,11 +18,9 @@ export default function ConfigBasicSettings({ field, updateField }: Props) {
         <label className="text-xs font-semibold flex items-center gap-1 text-muted-foreground uppercase tracking-wider">
           Field Label <Asterisk size={10} className="text-destructive" />
         </label>
-        <input
-          type="text"
+        <DebouncedInput
           value={field.label}
-          onChange={(e) => updateField(field.id, { label: e.target.value })}
-          className="w-full bg-muted/30 hover:bg-muted/50 border border-transparent focus:border-primary focus:bg-transparent rounded-lg px-3 py-2 text-sm transition-all outline-none text-foreground font-medium"
+          onChangeValue={(val) => updateField(field.id, { label: val })}
         />
       </div>
 
@@ -30,13 +29,11 @@ export default function ConfigBasicSettings({ field, updateField }: Props) {
         <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
           Description (Optional)
         </label>
-        <textarea
+        <DebouncedTextarea
           value={field.description || ""}
-          onChange={(e) =>
-            updateField(field.id, { description: e.target.value })
-          }
+          onChangeValue={(val) => updateField(field.id, { description: val })}
           placeholder="Help text for the user..."
-          className="w-full min-h-[70px] bg-muted/30 hover:bg-muted/50 border border-transparent focus:border-primary focus:bg-transparent rounded-lg px-3 py-2 text-sm transition-all outline-none resize-none text-foreground"
+          className="min-h-[70px]"
         />
       </div>
 
@@ -46,14 +43,10 @@ export default function ConfigBasicSettings({ field, updateField }: Props) {
           <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
             Placeholder
           </label>
-          <input
-            type="text"
+          <DebouncedInput
             value={field.placeholder || ""}
-            onChange={(e) =>
-              updateField(field.id, { placeholder: e.target.value })
-            }
+            onChangeValue={(val) => updateField(field.id, { placeholder: val })}
             placeholder="Enter placeholder..."
-            className="w-full bg-muted/30 hover:bg-muted/50 border border-transparent focus:border-primary focus:bg-transparent rounded-lg px-3 py-2 text-sm transition-all outline-none text-foreground"
           />
         </div>
       )}

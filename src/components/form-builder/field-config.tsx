@@ -3,8 +3,6 @@
 import React from "react";
 import { useFormBuilderStore } from "@/store/form-builder-store";
 import { Settings2 } from "lucide-react";
-
-// Import 3 komponen pecahan tadi
 import ConfigBasicSettings from "./config-basic-settings";
 import ConfigOptionsEditor from "./config-options-editor";
 import ConfigRulesPrivacy from "./config-rules-privacy";
