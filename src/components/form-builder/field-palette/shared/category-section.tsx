@@ -37,6 +37,7 @@ const CategorySection = memo(function CategorySection({
             icon={field.icon}
             // Kirim objek field UTUH ke onAdd
             onAdd={() => onAdd(field)}
+            isCompact={isCompact}
           />
         ))}
       </div>

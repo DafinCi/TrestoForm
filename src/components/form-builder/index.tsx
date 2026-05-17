@@ -1,16 +1,12 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import BuilderDndProvider from "./builder-context";
 import { WorkspaceShell } from "./workspace";
 import { useBuilderSchemaStore } from "@/store/builder-store";
 import { FormField } from "@/types/field";
 
 interface FormBuilderProps {
-  /**
-   * Jika ada initialData, berarti kita ada di rute [formId] (Mode Edit).
-   * Jika undefined, berarti kita ada di rute /create (Mode Baru).
-   */
   initialData?: {
     title?: string;
     description?: string;
@@ -19,25 +15,37 @@ interface FormBuilderProps {
 }
 
 export default function FormBuilder({ initialData }: FormBuilderProps) {
-  // Ambil action dari store untuk menyuntikkan data (Data Injection)
   const setFields = useBuilderSchemaStore((s) => s.setFields);
   const setTitle = useBuilderSchemaStore((s) => s.setTitle);
   const setDescription = useBuilderSchemaStore((s) => s.setDescription);
 
-  // Jalankan efek ini hanya saat pertama kali komponen dirender / data berubah
+  // 🌟 FIX HYDRATION: Bikin state penanda bahwa komponen sudah mount di browser
+  const [isMounted, setIsMounted] = useState(false);
+
   useEffect(() => {
+    // Tandai bahwa ini udah di sisi Client (Browser)
+    setIsMounted(true);
+
+    // 📝 MODE EDIT: Suntikkan data HANYA jika initialData dari DB tersedia.
+    // Kita hapus blok `else` supaya data LocalStorage hasil persist nggak ke-reset otomatis.
     if (initialData) {
-      // 📝 MODE EDIT: Suntikkan data dari Database/Walrus ke dalam Store
       if (initialData.fields) setFields(initialData.fields);
       if (initialData.title) setTitle(initialData.title);
       if (initialData.description) setDescription(initialData.description);
-    } else {
-      // ✨ MODE CREATE: Pastikan kanvas bersih dari sisa memory sebelumnya
-      setFields([]);
-      setTitle("Untitled Form");
-      setDescription("Click to edit description");
     }
   }, [initialData, setFields, setTitle, setDescription]);
+
+  // Selama belum mounted (masih dirender Next.js server), jangan render isinya
+  // Ini buat mencegah Hydration Mismatch error.
+  if (!isMounted) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-background">
+        <span className="text-sm text-muted-foreground animate-pulse">
+          Loading workspace...
+        </span>
+      </div>
+    );
+  }
 
   return (
     // Membungkus shell dengan context drag-and-drop

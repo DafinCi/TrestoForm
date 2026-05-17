@@ -14,8 +14,14 @@ import {
 } from "lucide-react";
 import { useBuilderUIStore } from "@/store/builder-store";
 
+// 🌟 IMPORT HOOK HISTORY KITA
+import { useBuilderHistory } from "@/hooks/form-builder/use-builder-history";
+
 export default function CanvasToolbar() {
   const { device, setDevice, zoom, setZoom, isSaving } = useBuilderUIStore();
+
+  // 🌟 PANGGIL HOOK-NYA DI SINI
+  const { undo, redo, canUndo, canRedo } = useBuilderHistory();
 
   const handleZoom = (type: "in" | "out") => {
     if (type === "in") setZoom(Math.min(zoom + 10, 150));
@@ -27,10 +33,31 @@ export default function CanvasToolbar() {
       {/* Kiri: Undo/Redo & Save Status */}
       <div className="flex items-center gap-4">
         <div className="flex items-center border-r border-border pr-4 gap-1">
-          <button className="p-1.5 hover:bg-accent hover:text-foreground rounded-md transition-all">
+          {/* 🌟 TOMBOL UNDO */}
+          <button
+            onClick={undo}
+            disabled={!canUndo}
+            title="Undo (Ctrl+Z)"
+            className={`p-1.5 rounded-md transition-all ${
+              canUndo
+                ? "hover:bg-accent hover:text-foreground cursor-pointer"
+                : "opacity-40 cursor-not-allowed"
+            }`}
+          >
             <RotateCcw size={16} />
           </button>
-          <button className="p-1.5 hover:bg-accent hover:text-foreground rounded-md transition-all opacity-40">
+
+          {/* 🌟 TOMBOL REDO */}
+          <button
+            onClick={redo}
+            disabled={!canRedo}
+            title="Redo (Ctrl+Y atau Ctrl+Shift+Z)"
+            className={`p-1.5 rounded-md transition-all ${
+              canRedo
+                ? "hover:bg-accent hover:text-foreground cursor-pointer"
+                : "opacity-40 cursor-not-allowed"
+            }`}
+          >
             <RotateCw size={16} />
           </button>
         </div>
