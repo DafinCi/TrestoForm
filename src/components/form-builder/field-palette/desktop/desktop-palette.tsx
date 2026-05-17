@@ -9,8 +9,6 @@ import React, {
 } from "react";
 import { useBuilderSchemaStore } from "@/store/builder-store";
 import { FIELD_DEFINITIONS } from "@/constants/field-definitions";
-
-// Import Micro-Components
 import PaletteHeader from "./header";
 import PaletteSearch from "./search";
 import PaletteFooter from "./footer";
@@ -42,6 +40,22 @@ export default function DesktopPalette() {
     },
     [],
   );
+
+  useEffect(() => {
+    const handleWindowResize = () => {
+      // Kalau layar di bawah 1024px (tablet/laptop kecil), paksa compact
+      if (window.innerWidth < 1024) {
+        setIsCompact(true);
+        setWidth(72);
+      }
+    };
+
+    // Jalankan sekali saat pertama kali render
+    handleWindowResize();
+
+    window.addEventListener("resize", handleWindowResize);
+    return () => window.removeEventListener("resize", handleWindowResize);
+  }, []); // Kosongin dependency-nya biar aman dan cuma trigger pas window resize
 
   // Resize Handler
   const startResizing = useCallback((e: React.PointerEvent) => {

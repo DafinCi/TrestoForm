@@ -7,14 +7,22 @@ import {
   ExternalLink,
 } from "lucide-react";
 
+// Penulisan tipe data standar Next.js App Router yang aman
+interface SuccessPageProps {
+  params: { slug: string };
+  searchParams: { [key: string]: string | string[] | undefined };
+}
+
 export default function SuccessPage({
   params,
   searchParams,
-}: {
-  params: { slug: string };
-  searchParams: { submissionId?: string };
-}) {
-  const submissionId = searchParams.submissionId;
+}: SuccessPageProps) {
+  // Ekstrak submissionId dari URL (?submissionId=...)
+  // Kita handle kemungkinan array untuk mencegah TypeScript error di versi Next.js terbaru
+  const rawSubmissionId = searchParams?.submissionId;
+  const submissionId = Array.isArray(rawSubmissionId)
+    ? rawSubmissionId[0]
+    : rawSubmissionId;
 
   return (
     <div className="min-h-screen bg-background relative flex flex-col items-center justify-center p-4 overflow-hidden font-sans">
@@ -45,12 +53,12 @@ export default function SuccessPage({
                 <code className="font-mono text-sm text-primary truncate">
                   {submissionId}
                 </code>
-                {/* Kalau Walrus punya explorer, lu bisa ganti href ini nanti */}
+                {/* Link ke Walrus Explorer Resmi */}
                 <a
-                  href={`https://walrus-testnet.explorer.space/blob/${submissionId}`}
+                  href={`https://walruscan.com/testnet/blob/${submissionId}`}
                   target="_blank"
                   rel="noreferrer"
-                  className="p-2 hover:bg-primary/10 rounded-md transition-colors text-primary"
+                  className="p-2 hover:bg-primary/10 rounded-md transition-colors text-primary shrink-0"
                   title="View on Walrus Explorer"
                 >
                   <ExternalLink size={16} />
@@ -67,7 +75,7 @@ export default function SuccessPage({
               <ArrowLeft size={16} /> Submit Another
             </Link>
             <Link
-              href="/"
+              href="/dashboard"
               className="flex items-center justify-center gap-2 px-6 py-3 bg-primary text-primary-foreground hover:opacity-90 rounded-xl font-medium transition-opacity text-sm shadow-lg shadow-primary/20"
             >
               Create Your Own Form

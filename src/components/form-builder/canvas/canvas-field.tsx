@@ -11,8 +11,6 @@ import {
 } from "@/store/builder-store";
 import FieldPreviewRenderer from "../field-renderers/renderer-map";
 import CanvasInsertIndicator from "./canvas-insert-indicator";
-
-// 🔥 IMPORT MOBILE CONTROLS
 import MobileReorderControls from "../mobile/mobile-reorder-controls";
 
 interface Props {
@@ -30,10 +28,13 @@ const CanvasField = memo(function CanvasField({
   // Ambil state UI
   const isActive = useBuilderUIStore((s) => s.activeFieldId === id);
   const setActiveField = useBuilderUIStore((s) => s.setActiveField);
-  const device = useBuilderUIStore((s) => s.device); // 🔥 Ambil mode device saat ini
-  const isMobile = device === "mobile";
+  const device = useBuilderUIStore((s) => s.device);
+  const viewMode = useBuilderUIStore((s) => s.viewMode); // 🌟 AMBIL VIEW MODE
 
-  // Ekstrak data tambahan dari useSortable
+  const isMobile = device === "mobile";
+  const isPreview = viewMode === "preview"; // 🌟 FLAG PREVIEW
+
+  // Ekstrak data dnd-kit (Disable dnd saat preview)
   const {
     attributes,
     listeners,
@@ -44,7 +45,10 @@ const CanvasField = memo(function CanvasField({
     isOver,
     activeIndex,
     overIndex,
-  } = useSortable({ id });
+  } = useSortable({
+    id,
+    disabled: isPreview, // 🌟 MATIKAN DRAG SAAT PREVIEW
+  });
 
   if (!field) return null;
 
@@ -53,7 +57,6 @@ const CanvasField = memo(function CanvasField({
     transition,
   };
 
-  // State transparan pas elemen ini yang lagi ditarik
   if (isDragging && !isOverlay) {
     return (
       <div
@@ -64,25 +67,27 @@ const CanvasField = memo(function CanvasField({
     );
   }
 
-  const showIndicator = isOver && !isDragging;
+  const showIndicator = isOver && !isDragging && !isPreview;
   const indicatorPosition = activeIndex < overIndex ? "bottom" : "top";
 
   return (
     <div
       ref={isOverlay ? undefined : setNodeRef}
       style={isOverlay ? undefined : style}
-      onClick={() => setActiveField(field.id)}
+      // 🌟 MATIKAN KLIK SAAT PREVIEW
+      onClick={isPreview ? undefined : () => setActiveField(field.id)}
       className={`
-        relative group flex items-start p-6 transition-all duration-200 cursor-pointer border-b border-border/40 last:border-b-0
-        ${isActive ? "bg-primary/5" : "hover:bg-muted/30 bg-card"}
+        relative group flex items-start transition-all duration-200
+        ${isPreview ? "py-4" : "p-6 border-b border-border/40 last:border-b-0 cursor-pointer"}
+        ${!isPreview && isActive ? "bg-primary/5" : ""}
+        ${!isPreview && !isActive ? "hover:bg-muted/30 bg-card" : ""}
         ${isOverlay ? "shadow-2xl ring-2 ring-primary/50 scale-[1.02] bg-card rounded-xl border-none z-50 cursor-grabbing" : ""}
       `}
     >
-      {/* Render Indikator */}
       {showIndicator && <CanvasInsertIndicator position={indicatorPosition} />}
 
-      {/* 🔥 INJEKSI MOBILE REORDER CONTROLS */}
-      {isActive && isMobile && !isOverlay && (
+      {/* 🌟 SEMBUNYIKAN KONTROL MOBILE SAAT PREVIEW */}
+      {!isPreview && isActive && isMobile && !isOverlay && (
         <div className="absolute -top-5 right-2 z-30 animate-in fade-in slide-in-from-bottom-2 duration-200">
           <MobileReorderControls
             fieldId={field.id}
@@ -92,8 +97,8 @@ const CanvasField = memo(function CanvasField({
         </div>
       )}
 
-      {/* Drag Handle Desktop (Disembunyikan di Mobile) */}
-      {!isMobile && (
+      {/* 🌟 SEMBUNYIKAN DRAG HANDLE SAAT PREVIEW */}
+      {!isPreview && !isMobile && (
         <div
           {...attributes}
           {...listeners}
@@ -107,8 +112,8 @@ const CanvasField = memo(function CanvasField({
       )}
 
       {/* Area Konten Preview */}
-      <div className="flex-1 pl-6 pr-10">
-        {field.isSensitive && (
+      <div className={`flex-1 ${isPreview ? "px-0" : "pl-6 pr-10"}`}>
+        {!isPreview && field.isSensitive && (
           <div className="absolute top-4 right-4 flex items-center gap-1.5 bg-amber-500/10 text-amber-600 px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider">
             <Lock size={12} /> Sensitive
           </div>
@@ -116,20 +121,22 @@ const CanvasField = memo(function CanvasField({
         <FieldPreviewRenderer field={field} />
       </div>
 
-      {/* Delete Button */}
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          removeField(field.id);
-        }}
-        className={`
-          absolute right-4 top-1/2 -translate-y-1/2 p-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-all z-10
-          ${isActive ? "opacity-100" : "opacity-0 group-hover:opacity-100"}
-        `}
-        title="Delete Field"
-      >
-        <Trash2 size={18} />
-      </button>
+      {/* 🌟 SEMBUNYIKAN DELETE BUTTON SAAT PREVIEW */}
+      {!isPreview && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            removeField(field.id);
+          }}
+          className={`
+            absolute right-4 top-1/2 -translate-y-1/2 p-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-all z-10
+            ${isActive ? "opacity-100" : "opacity-0 group-hover:opacity-100"}
+          `}
+          title="Delete Field"
+        >
+          <Trash2 size={18} />
+        </button>
+      )}
     </div>
   );
 });

@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, Rocket } from "lucide-react";
 import { toast } from "sonner";
-
+import { clientEnv } from "@/lib/env/client";
 import {
   useCurrentAccount,
   useSignAndExecuteTransaction,
@@ -12,11 +12,10 @@ import {
 import { Transaction } from "@mysten/sui/transactions";
 
 import { useBuilderSchemaStore } from "@/store/builder-store";
-
-// Idealnya nanti pindahkan 2 konstanta ini ke process.env
-const TREASURY_ADDRESS =
-  "0xa3ad971426654a12117184a227ac20ee65d24db2eab1a153c38a2b100b765787";
-const PUBLISH_FEE_MIST = 1_000_000_000;
+const {
+  treasuryAddress: TREASURY_ADDRESS,
+  formPublishFeeMist: PUBLISH_FEE_MIST,
+} = clientEnv;
 
 export default function PublishButton() {
   const router = useRouter();
@@ -48,7 +47,8 @@ export default function PublishButton() {
 
     try {
       const tx = new Transaction();
-      const [coin] = tx.splitCoins(tx.gas, [PUBLISH_FEE_MIST]);
+      const feeMist = parseInt(String(PUBLISH_FEE_MIST), 10);
+      const [coin] = tx.splitCoins(tx.gas, [feeMist]);
       tx.transferObjects([coin], TREASURY_ADDRESS);
 
       signAndExecuteTransaction(

@@ -8,7 +8,6 @@ import TextRenderer from "./text-renderer";
 import TextareaRenderer from "./textarea-renderer";
 import CheckboxRenderer from "./checkbox-renderer";
 import SelectRenderer from "./select-renderer";
-import FileRenderer from "./file-renderer";
 import RatingRenderer from "./rating-renderer"; // Tambahan sesuai tipe di types/field.ts
 import WalrusMediaRenderer from "./walrus-media-renderer";
 import RadioRenderer from "./radio-renderer";

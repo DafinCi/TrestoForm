@@ -13,16 +13,19 @@ export default async function PublicFormPage({
 }: {
   params: { slug: string };
 }) {
-  // slug di URL adalah blobId dari Walrus
   const formId = params.slug;
 
   let formSchema;
   try {
-    // Tarik data schema langsung dari jaringan Walrus!
+    // Tarik data schema langsung dari jaringan Walrus
     formSchema = await getFormSchema(formId);
   } catch (error) {
     console.error("[PublicFormPage] Failed to fetch form:", error);
-    // Kalau form gak ketemu / blobId salah, lempar ke halaman 404 Next.js
+    notFound(); // Lempar ke 404 kalau blobId gak valid
+  }
+
+  // Fallback pengaman jika data Walrus ternyata kosong atau corrupt
+  if (!formSchema || !formSchema.fields) {
     notFound();
   }
 
@@ -34,7 +37,7 @@ export default async function PublicFormPage({
 
       {/* Kontainer Form */}
       <div className="w-full max-w-3xl relative z-10">
-        {/* Dekorasi Garis Atas (Glowing Top Border) */}
+        {/* Dekorasi Garis Atas */}
         <div className="h-4 w-full bg-gradient-to-r from-primary via-emerald-400 to-primary rounded-t-3xl shadow-[0_0_20px_rgba(20,184,166,0.3)]" />
 
         {/* Bingkai Kaca (Glassmorphism Frame) */}
@@ -45,14 +48,13 @@ export default async function PublicFormPage({
               {formSchema.title}
             </h1>
             {formSchema.description && (
-              <p className="text-muted-foreground text-sm sm:text-base leading-relaxed">
+              <p className="text-muted-foreground text-sm sm:text-base leading-relaxed whitespace-pre-wrap">
                 {formSchema.description}
               </p>
             )}
           </div>
 
-          {/* Render Komponen Interaktif Client-Side */}
-          {/* Kita passing formId agar nanti saat submit, sistem tahu data ini milik form mana */}
+          {/* Render Komponen Interaktif Client-Side (React Hook Form) */}
           <PublicForm fields={formSchema.fields} formId={formId} />
         </div>
 

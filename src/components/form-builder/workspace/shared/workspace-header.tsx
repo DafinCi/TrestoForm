@@ -11,7 +11,7 @@ import ViewToggle from "./view-toggle";
 import PublishButton from "./publish-button";
 
 export default function WorkspaceHeader() {
-  // Hanya subscribe ke title. Perubahan di field atau viewMode TIDAK akan me-render ulang header.
+  // Hanya subscribe ke title.
   const title = useBuilderSchemaStore((s) => s.title);
   const setTitle = useBuilderSchemaStore((s) => s.setTitle);
 
@@ -26,8 +26,8 @@ export default function WorkspaceHeader() {
           <ChevronLeft size={20} />
         </Link>
         <DebouncedInput
-          value={title}
-          onChangeValue={setTitle}
+          value={title || ""} // 🌟 FIX: Pastikan tidak pernah undefined/null
+          onChangeValue={(val) => setTitle(val ?? "")} // 🌟 FIX: Kalau dihapus habis, set jadi string kosong, jangan null
           className="font-heading text-lg md:text-xl bg-transparent border-none focus-visible:outline-none focus-visible:ring-0 shadow-none placeholder:text-muted-foreground/40 w-full sm:w-64 font-bold px-0"
           placeholder="Untitled Form"
         />
