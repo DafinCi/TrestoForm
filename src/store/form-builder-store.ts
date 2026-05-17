@@ -31,6 +31,7 @@ export const useFormBuilderStore = create<FormBuilderState>((set) => ({
   // --- Core Init ---
   title: "",
   setTitle: (title) => set({ title }),
+  
 
   fields: [], // Inisialisasi sebagai array kosong, BUKAN undefined
   addField: (field) => set((state) => ({ fields: [...state.fields, field] })),

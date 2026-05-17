@@ -1,20 +1,20 @@
 import React from "react";
-import FormBuilderClient from "@/components/form-builder/form-builder-client";
 import { Metadata } from "next";
 
+// Asumsi: form-builder/index.tsx mengekspor komponen utama Builder lu
+// yang udah ngebungkus WorkspaceProvider, DesktopWorkspace, MobileWorkspace, dll.
+import FormBuilder from "@/components/form-builder";
+
 export const metadata: Metadata = {
-  title: "Create Form | Your Web3 App",
-  description: "Build secure and privacy-focused forms using Walrus Protocol.",
+  title: "Create Form | Walrus Web3 App",
+  description: "Build secure and privacy-focused forms.",
 };
 
 export default function CreateFormPage() {
-  // Sebagai Server Component, di sini lu bisa nge-fetch session user
-  // atau ngecek hak akses (authorization) sebelum ngerender Form Builder.
-
   return (
-    <main className="h-full w-full">
-      {/* Kita oper beban render interaktif ke Client Component */}
-      <FormBuilderClient />
-    </main>
+    // Kita kasih h-screen atau h-[calc(100vh-?)] tergantung layout dashboard lu.
+    // Builder butuh full height biar area canvas bisa scroll dengan benar.
+
+    <FormBuilder />
   );
 }

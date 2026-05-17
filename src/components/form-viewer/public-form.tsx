@@ -2,23 +2,22 @@
 
 import React, { useState } from "react";
 import { UploadCloud, CheckCircle2, Loader2 } from "lucide-react";
-
-// Struktur data tipe pertanyaan
-interface Field {
-  id: string;
-  type: "text" | "textarea" | "file";
-  label: string;
-  required?: boolean;
-  placeholder?: string;
-  description?: string;
-}
+import type { FormField } from "@/types/field"; // IMPORT INI!
+import { useRouter } from "next/navigation";
 
 interface PublicFormProps {
   formId: string;
-  fields: Field[];
+  title: string; // Tambahin title
+  description?: string; // Tambahin description
+  fields: FormField[]; // PAKE FORM FIELD YANG ASLI
 }
 
-export default function PublicForm({ formId, fields }: PublicFormProps) {
+export default function PublicForm({
+  formId,
+  title,
+  description,
+  fields,
+}: PublicFormProps) {
   const [formData, setFormData] = useState<Record<string, any>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -28,16 +27,35 @@ export default function PublicForm({ formId, fields }: PublicFormProps) {
     setFormData((prev) => ({ ...prev, [id]: value }));
   };
 
+  const router = useRouter();
+
   // Simulasi proses submit ke blockchain / decentralized storage
+  // Di public-form.tsx
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    // Simulasi jeda enkripsi dan upload ke Walrus selama 2.5 detik
-    await new Promise((resolve) => setTimeout(resolve, 2500));
+    try {
+      const payload = { formId, data: formData };
+      const response = await fetch("/api/submissions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
 
-    setIsSubmitting(false);
-    setIsSuccess(true);
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || "Gagal submit");
+      }
+
+      // REDIRECT KE HALAMAN SUCCESS, bawa submissionId di URL
+      router.push("/forms/${formId}/success?submissionId=${result.blobId}");
+    } catch (error) {
+      console.error(error);
+      alert("Error submitting form. Check network.");
+      setIsSubmitting(false); // Matikan loading kalau error
+    }
   };
 
   // Tampilan Sukses (Success State)

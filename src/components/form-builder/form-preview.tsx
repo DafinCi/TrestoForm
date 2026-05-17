@@ -1,21 +1,26 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useFormBuilderStore } from "@/store/form-builder-store";
 import { generateZodSchema } from "@/lib/form-engine/validator";
 
 // Icons
-import { ShieldAlert, Send } from "lucide-react";
+import { ShieldAlert, Send, CheckCircle2, AlertCircle } from "lucide-react";
 
 export default function FormPreview() {
   const { title, description, fields } = useFormBuilderStore();
 
-  // Generate Zod schema on-the-fly setiap kali fields berubah
+  // State untuk nyimpen hasil dari API kita
+  const [submissionResult, setSubmissionResult] = useState<{
+    status: "idle" | "success" | "error";
+    message?: string;
+    blobId?: string;
+  }>({ status: "idle" });
+
   const dynamicSchema = useMemo(() => generateZodSchema(fields), [fields]);
 
-  // Setup React Hook Form
   const {
     register,
     handleSubmit,
@@ -26,13 +31,57 @@ export default function FormPreview() {
     mode: "onSubmit",
   });
 
-  const onSubmit = async (data: any) => {
-    // Di sini nanti kita sambungin ke Walrus & Seal!
-    console.log("🚀 Payload siap dikirim ke Walrus:", data);
+  const onSubmit = async (formData: any) => {
+    setSubmissionResult({ status: "idle" });
 
-    // Simulasi loading
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    alert("Form valid! Cek console untuk lihat JSON payload-nya.");
+    // Dummy Form ID (Nanti lu ganti pakai ID asli dari database kalau form udah disave)
+    const formId = "form_" + Math.random().toString(36).slice(2, 9);
+
+    try {
+      // 1. Susun Payload sesuai SubmissionInputSchema di service lu
+      const payload = {
+        formId,
+        data: formData,
+        meta: {
+          userAgent: window.navigator.userAgent, // Nambahin data meta beneran!
+          source: "web-form-preview",
+        },
+      };
+
+      console.log("🚀 Payload nembak ke API:", payload);
+
+      // 2. Tembak API Route lu
+      const response = await fetch("/api/submissions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const result = await response.json();
+
+      // 3. Handle Response dari API lu
+      if (response.ok && result.success) {
+        setSubmissionResult({
+          status: "success",
+          message: `Form successfully secured on Walrus Protocol!`,
+          blobId: result.blobId,
+        });
+        reset(); // Bersihin input form setelah sukses
+      } else {
+        // Kalau error dari validasi API atau Walrus gagal
+        throw new Error(result.error || "Failed to secure form data.");
+      }
+    } catch (error: any) {
+      console.error("[FormPreview] Gagal submit:", error);
+      setSubmissionResult({
+        status: "error",
+        message:
+          error.message ||
+          "An unexpected error occurred while sealing your data.",
+      });
+    }
   };
 
   if (fields.length === 0) {
@@ -55,6 +104,33 @@ export default function FormPreview() {
         )}
       </div>
 
+      {/* Tampilkan Notifikasi Sukses/Error di atas form */}
+      {submissionResult.status === "success" && (
+        <div className="mb-6 p-4 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 rounded-lg flex items-start gap-3">
+          <CheckCircle2
+            className="text-emerald-500 mt-0.5 shrink-0"
+            size={18}
+          />
+          <div>
+            <p className="text-sm font-medium text-emerald-800 dark:text-emerald-300">
+              {submissionResult.message}
+            </p>
+            <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-1 font-mono break-all">
+              Blob ID: {submissionResult.blobId}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {submissionResult.status === "error" && (
+        <div className="mb-6 p-4 bg-destructive/10 border border-destructive/20 rounded-lg flex items-start gap-3">
+          <AlertCircle className="text-destructive mt-0.5 shrink-0" size={18} />
+          <p className="text-sm font-medium text-destructive">
+            {submissionResult.message}
+          </p>
+        </div>
+      )}
+
       {/* Form Body */}
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         {fields.map((field) => {
@@ -62,7 +138,6 @@ export default function FormPreview() {
 
           return (
             <div key={field.id} className="space-y-2">
-              {/* Label & Privacy Indicator */}
               <label className="flex items-center gap-2 text-sm font-semibold text-foreground">
                 {field.label}
                 {field.required && <span className="text-destructive">*</span>}
@@ -73,14 +148,12 @@ export default function FormPreview() {
                 )}
               </label>
 
-              {/* Description */}
               {field.description && (
                 <p className="text-xs text-muted-foreground mb-2">
                   {field.description}
                 </p>
               )}
 
-              {/* Dynamic Inputs Render */}
               {field.type === "textarea" ? (
                 <textarea
                   {...register(field.id)}
@@ -114,7 +187,6 @@ export default function FormPreview() {
                 />
               )}
 
-              {/* Error Message */}
               {error && (
                 <p className="text-xs text-destructive mt-1 font-medium">
                   {error}
@@ -131,7 +203,10 @@ export default function FormPreview() {
             className="w-full flex items-center justify-center gap-2 bg-primary text-primary-foreground py-3 rounded-lg font-medium hover:bg-primary/90 transition-colors disabled:opacity-70"
           >
             {isSubmitting ? (
-              "Securing payload..."
+              <>
+                <div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
+                Sealing Data on Walrus...
+              </>
             ) : (
               <>
                 Submit Decentralized Form <Send size={16} />

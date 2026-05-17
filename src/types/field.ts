@@ -1,30 +1,62 @@
 export type FieldType =
   | "text"
+  | "number"
   | "textarea"
+  | "richtext"
   | "select"
+  | "radio"
   | "checkbox"
   | "rating"
+  | "date"
+  | "url"
+  | "email"
+  | "phone"
   | "file"
-  | "url";
+  | "video"
+  | "image";
+
+export interface FieldOption {
+  id: string;
+  label: string;
+  value: string;
+}
 
 export interface FormField {
-  id: string; // Pastikan nanti pakai UUID/crypto.randomUUID()
+  id: string;
   type: FieldType;
   label: string;
-  description?: string; // Tambahan: Biar UI-nya bisa kasih teks bantuan kecil
   placeholder?: string;
-  required: boolean; // Bikin required non-opsional dengan default false aja, biar Zod gampang
+  description?: string;
+  required: boolean;
+  isSensitive: boolean;
+  publicVisible: boolean;
+  options?: FieldOption[];
+  // Tambahan: Default value untuk field statis
+  defaultValue?: any;
 
-  options?: string[]; // Khusus buat select/checkbox
-
-  // Privacy & Walrus/Seal Specific
-  isSensitive: boolean; // Default false
-  publicVisible: boolean; // Default true
-
-  // Tambahan: Buat bekal Zod Validation nanti
   validation?: {
+    required?: boolean;
+    customErrorMessage?: string;
+
+    // Text based
+    minLength?: number;
+    maxLength?: number;
+    format?: "none" | "email" | "url" | "phone";
+
+    // Number / Rating
     min?: number;
     max?: number;
-    maxFileSize?: number; // Khusus file upload ke Walrus
+
+    // File & Media (Walrus Ready)
+    maxFileSize?: number; // MB
+    allowedFileTypes?: string[];
+    maxDuration?: number; // Khusus video (detik)
+    allowMultiple?: boolean;
+  };
+
+  // State khusus untuk integrasi 3rd party
+  metadata?: {
+    walrusEpochs?: number; // Berapa lama file disimpan di Walrus
+    encryptionType?: "none" | "seal-aes" | "homomorphic";
   };
 }

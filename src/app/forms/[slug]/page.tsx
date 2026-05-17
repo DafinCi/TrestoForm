@@ -1,43 +1,30 @@
+// =============================================================================
+// src/app/forms/[slug]/page.tsx
+// =============================================================================
+
 import React from "react";
 import PublicForm from "@/components/form-viewer/public-form";
 import { ShieldCheck } from "lucide-react";
+import { getFormSchema } from "@/services/form.service";
+import { notFound } from "next/navigation";
 
-export default function PublicFormPage({
+export default async function PublicFormPage({
   params,
 }: {
   params: { slug: string };
 }) {
-  // Simulasi data form yang ditarik dari backend/blockchain berdasarkan params.id
-  const mockForm = {
-    slug: params.slug,
-    title: "Web3 Developer Survey 2026",
-    description:
-      "Your responses are encrypted via Seal and stored immutably on the Walrus Protocol. We value your privacy and data ownership.",
-    fields: [
-      {
-        id: "f1",
-        type: "text" as const,
-        label: "Wallet Address or ENS",
-        required: true,
-        placeholder: "0x... or vitalik.eth",
-      },
-      {
-        id: "f2",
-        type: "textarea" as const,
-        label: "What is the biggest challenge in Web3 right now?",
-        required: true,
-        placeholder: "Gas fees, UX, wallet management...",
-      },
-      {
-        id: "f3",
-        type: "file" as const,
-        label: "Upload Diagnostic Logs (Optional)",
-        required: false,
-        description:
-          "File will be sharded and stored on Walrus decentralized storage.",
-      },
-    ],
-  };
+  // slug di URL adalah blobId dari Walrus
+  const formId = params.slug;
+
+  let formSchema;
+  try {
+    // Tarik data schema langsung dari jaringan Walrus!
+    formSchema = await getFormSchema(formId);
+  } catch (error) {
+    console.error("[PublicFormPage] Failed to fetch form:", error);
+    // Kalau form gak ketemu / blobId salah, lempar ke halaman 404 Next.js
+    notFound();
+  }
 
   return (
     <div className="min-h-screen bg-background relative flex flex-col items-center justify-start pt-10 sm:pt-20 pb-24 px-4 sm:px-6 overflow-hidden font-sans">
@@ -55,15 +42,18 @@ export default function PublicFormPage({
           {/* Header Form */}
           <div className="mb-8 border-b border-border/60 pb-8">
             <h1 className="font-heading text-3xl sm:text-5xl font-bold text-foreground mb-4 leading-tight">
-              {mockForm.title}
+              {formSchema.title}
             </h1>
-            <p className="text-muted-foreground text-sm sm:text-base leading-relaxed">
-              {mockForm.description}
-            </p>
+            {formSchema.description && (
+              <p className="text-muted-foreground text-sm sm:text-base leading-relaxed">
+                {formSchema.description}
+              </p>
+            )}
           </div>
 
-          {/* Render Komponen Interaktif */}
-          <PublicForm fields={mockForm.fields} formId={mockForm.id} />
+          {/* Render Komponen Interaktif Client-Side */}
+          {/* Kita passing formId agar nanti saat submit, sistem tahu data ini milik form mana */}
+          <PublicForm fields={formSchema.fields} formId={formId} />
         </div>
 
         {/* Trust Badge / Security Note */}

@@ -101,7 +101,7 @@ export default function ConnectWallet() {
               disconnect();
               setIsDropdownOpen(false);
             }}
-            className="w-full flex items-center gap-2 px-4 py-2 text-sm text-destructive hover:bg-destructive/10 transition-colors font-semibold"
+            className="w-full z-[999] flex items-center gap-2 px-4 py-2 text-sm text-destructive hover:bg-destructive/10 transition-colors font-semibold"
           >
             <LogOut size={16} />
             Disconnect
