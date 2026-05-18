@@ -130,3 +130,43 @@ export async function getDashboardOverview(address: string) {
     recentForms,
   };
 }
+
+export async function getFormOverviewById(formId: string, address: string) {
+  // 1. Verifikasi apakah user (address) ini benar-benar pemilik form-nya di DB Lokal
+  const userForms = await formRegistryRepo.findByCreator(address);
+  const formRecord = userForms.find((f) => f.formId === formId);
+
+  // Walaupun formRecord gak ketemu (misal karena DB lokal kehapus),
+  // kita tetap coba tarik dari Walrus asalkan address-nya valid.
+  // Tapi untuk keamanan, kita cek record-nya.
+  if (!formRecord) {
+    throw new Error("Form not found or you don't have permission to view it.");
+  }
+
+  // 2. Tarik skema form dari Walrus & data submissions (parallel)
+  const [schema, subRecords] = await Promise.all([
+    getFormSchema(formId),
+    submissionRepo.findByFormId(formId),
+  ]);
+
+  // 3. Kembalikan data yang diformat khusus untuk halaman Overview Detail
+  return {
+    id: formId,
+    title: schema.title,
+    description: schema.description || "No description provided.",
+    status: formRecord.status,
+    createdAt: new Date(formRecord.createdAt).toLocaleDateString("id-ID", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    }),
+    stats: {
+      totalResponses: subRecords.length,
+      lastResponseDate:
+        subRecords.length > 0
+          ? "Recently" // Nanti lu bisa ganti pakai timestamp asli dari subRecords
+          : "No responses yet",
+      fieldsCount: schema.fields.length,
+    },
+  };
+}
