@@ -22,17 +22,6 @@ import { verifySession } from "@/lib/auth/session";
 import { getDashboardOverview } from "@/services/analytics.service";
 
 export default async function DashboardPage() {
-  // 1. Verifikasi Web3 Session
-  const session = await verifySession();
-
-  // 2. Proteksi Halaman: Redirect ke home/login jika belum auth
-  if (!session?.address) {
-    redirect("/");
-  }
-
-  // 3. Tarik data overview dari backend (Zero Network Waterfall)
-  const { stats, recentForms } = await getDashboardOverview(session.address);
-
   // Mapping ikon dinamis untuk array stats
   const icons = [FileText, Users, Database, ShieldCheck];
   const colors = [
