@@ -10,9 +10,18 @@ import { getJsonRpcFullnodeUrl } from "@mysten/sui/jsonRpc";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import "@mysten/dapp-kit/dist/index.css";
 const { networkConfig } = createNetworkConfig({
-  localnet: { url: getJsonRpcFullnodeUrl("localnet") },
-  testnet: { url: getJsonRpcFullnodeUrl("testnet") },
-  mainnet: { url: getJsonRpcFullnodeUrl("mainnet") },
+  localnet: {
+    url: getJsonRpcFullnodeUrl("localnet"),
+    network: "localnet",
+  },
+  testnet: {
+    url: getJsonRpcFullnodeUrl("testnet"),
+    network: "testnet",
+  },
+  mainnet: {
+    url: getJsonRpcFullnodeUrl("mainnet"),
+    network: "mainnet",
+  },
 });
 
 export function Web3Provider({ children }: { children: React.ReactNode }) {

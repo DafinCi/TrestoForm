@@ -8,7 +8,10 @@ import React, {
   useRef,
 } from "react";
 import { useBuilderSchemaStore } from "@/store/builder-store";
-import { FIELD_DEFINITIONS } from "@/constants/field-definitions";
+import {
+  FIELD_DEFINITIONS,
+  type FieldDefinition,
+} from "@/constants/field-definitions";
 import PaletteHeader from "./header";
 import PaletteSearch from "./search";
 import PaletteFooter from "./footer";

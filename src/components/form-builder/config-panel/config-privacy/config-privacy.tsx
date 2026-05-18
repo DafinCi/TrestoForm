@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback } from "react";
+import React, { useCallback, useMemo } from "react";
 import {
   useBuilderSchemaStore,
   useBuilderUIStore,
@@ -19,11 +19,15 @@ export default function ConfigPrivacy() {
   if (!field) return null;
 
   // Set default values kalau privacy object belum ada di field
-  const privacy = field.privacy || {
-    isEncrypted: false,
-    isMasked: false,
-    visibility: "public" as const,
-  };
+  const privacy = useMemo(() => {
+    return (
+      field.privacy || {
+        isEncrypted: false,
+        isMasked: false,
+        visibility: "public" as const,
+      }
+    );
+  }, [field.privacy]);
 
   // Helper untuk update flat privacy object
   const updatePrivacy = useCallback(

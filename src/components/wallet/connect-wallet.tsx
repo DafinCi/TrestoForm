@@ -16,7 +16,6 @@ import {
   Loader2,
 } from "lucide-react";
 import { useAuthStore } from "@/store/auth-store";
-import { b64js } from "@mysten/sui/utils"; // Utilitas bawaan untuk konversi teks ke format bytes base64
 
 export default function ConnectWallet() {
   const account = useCurrentAccount();

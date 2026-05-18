@@ -20,6 +20,7 @@ import { FieldType, FormField } from "@/types/field";
 export interface FieldDefinition extends Partial<FormField> {
   type: FieldType;
   icon: any;
+  label: string;
   category: "Basic" | "Choice" | "Media" | "Advanced";
 }
 

@@ -12,7 +12,8 @@
 
 import { z } from "zod";
 import { uploadJSON, uploadFile } from "@/lib/walrus/upload";
-import { fetchSubmission } from "@/lib/walrus/fetch";
+import { fetchJSON } from "@/lib/walrus/fetch"; // FIX: Gunakan fetchJSON
+
 import type {
   WalrusUploadResult,
   WalrusBlobMetadata,
@@ -167,7 +168,8 @@ export async function getSubmission(
     );
   }
 
-  const { data } = await fetchSubmission<WalrusSubmissionPayload>(blobId);
+  // FIX: Menggunakan fetchJSON agar tipenya sejajar
+  const { data } = await fetchJSON<WalrusSubmissionPayload>(blobId);
   return data;
 }
 
@@ -181,7 +183,8 @@ export async function getSubmissionsByForm(
 
   const settled = await Promise.allSettled(
     records.map(async (r) => {
-      const { data } = await fetchSubmission<WalrusSubmissionPayload>(r.blobId);
+      // FIX: Menggunakan fetchJSON di sini juga
+      const { data } = await fetchJSON<WalrusSubmissionPayload>(r.blobId);
       return data;
     }),
   );

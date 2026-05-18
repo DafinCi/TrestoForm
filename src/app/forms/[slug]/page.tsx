@@ -32,7 +32,10 @@ export default async function PublicFormPage({ params }: PublicFormPageProps) {
   }
 
   // 3. (Opsional tapi aman) Fallback empty settings jika di schema tidak ada settings
-  const formSettings = formSchema.settings || {};
+  const formSettings = formSchema.settings || {
+    allowAnonymous: true,
+    globalVisibility: "public",
+  };
 
   return (
     <div className="min-h-screen bg-background relative flex flex-col items-center justify-start pt-10 sm:pt-20 pb-24 px-4 sm:px-6 overflow-hidden font-sans">

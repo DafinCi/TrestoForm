@@ -140,13 +140,13 @@ export const useBuilderSchemaStore = create<BuilderSchemaState>()(
       addField: (template) =>
         set((state) => {
           const newField: FormField = {
+            ...template,
             id: crypto.randomUUID(),
-            type: template.type,
             label: template.label || `New ${template.type}`,
             description: template.description || "",
-            required: false,
-            isSensitive: false,
-            publicVisible: true,
+            required: template.required ?? false,
+            isSensitive: template.isSensitive ?? false,
+            publicVisible: template.publicVisible ?? true,
 
             // Sesuai dengan schema field.ts lu yang baru
             validation: template.validation || {},

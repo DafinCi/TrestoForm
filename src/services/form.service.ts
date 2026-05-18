@@ -4,8 +4,9 @@
 // =============================================================================
 
 import { uploadJSON } from "@/lib/walrus/upload";
-import { fetchSubmission } from "@/lib/walrus/fetch";
+import { fetchJSON } from "@/lib/walrus/fetch";
 import type { FormField } from "@/types/field";
+import type { FormSettings } from "@/types/form"; // IMPORT INI
 import { WalrusError } from "@/lib/walrus/schema";
 
 export interface FormSchemaPayload {
@@ -13,8 +14,9 @@ export interface FormSchemaPayload {
   title: string;
   description?: string;
   fields: FormField[];
+  settings?: FormSettings; // TAMBAHKAN INI: Jadikan opsional agar backward compatible dengan form lama di Walrus
   createdAt: string;
-  creatorAddress?: string; // Opsional: kalau lu mau catat dompet creator-nya
+  creatorAddress?: string;
 }
 
 /**
@@ -25,25 +27,33 @@ export async function saveFormSchema(
   title: string,
   fields: FormField[],
   description?: string,
+  settings?: FormSettings, // Tambahkan ini sebagai parameter opsional
 ): Promise<{ formId: string; uploadedAt: number }> {
   if (!fields || fields.length === 0) {
     throw new Error("Form must have at least one field.");
   }
+
+  // Jika settings tidak dikirim, kita set default value
+  const defaultSettings: FormSettings = {
+    allowAnonymous: true,
+    globalVisibility: "public", // Default: form bisa diisi oleh siapa saja
+    // (tambahkan default lain jika ada di FormSettings)
+  };
 
   const payload: FormSchemaPayload = {
     version: "1.0",
     title,
     description,
     fields,
+    settings: settings || defaultSettings, // Masukkan ke payload
     createdAt: new Date().toISOString(),
   };
 
   try {
-    // Kita manfaatkan uploadJSON yang udah lu bikin di upload.ts!
     const uploadResult = await uploadJSON(payload);
 
     return {
-      formId: uploadResult.blobId, // blobId ini bakal jadi URL /f/[blobId]
+      formId: uploadResult.blobId,
       uploadedAt: uploadResult.uploadedAt,
     };
   } catch (err) {
@@ -62,9 +72,10 @@ export async function getFormSchema(
   formId: string,
 ): Promise<FormSchemaPayload> {
   try {
-    const { data } = await fetchSubmission<FormSchemaPayload>(formId);
+    // PERBAIKAN 2: Gunakan fetchJSON agar tipe data kembaliannya pas sesuai generic-nya
+    const { data } = await fetchJSON<FormSchemaPayload>(formId);
 
-    // Validasi basic untuk memastikan ini benar-benar file schema form kita
+    // Sekarang data.fields dijamin kedeteksi oleh TypeScript karena tipenya adalah FormSchemaPayload murni!
     if (!data || data.version !== "1.0" || !Array.isArray(data.fields)) {
       throw new Error("Invalid form schema structure retrieved from Walrus.");
     }

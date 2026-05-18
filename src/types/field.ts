@@ -21,6 +21,10 @@ export interface FieldOption {
   value: string;
 }
 
+export interface PrivacySettings {
+  [key: string]: any;
+}
+
 export interface FormField {
   id: string;
   type: FieldType;
@@ -33,6 +37,7 @@ export interface FormField {
   options?: FieldOption[];
   // Tambahan: Default value untuk field statis
   defaultValue?: any;
+  privacy?: PrivacySettings;
 
   validation?: {
     required?: boolean;
