@@ -30,9 +30,9 @@ export default function LandingPage() {
           </h1>
 
           <p className="text-lg sm:text-2xl font-medium max-w-3xl mb-10 opacity-90 leading-relaxed">
-            The first fully decentralized form builder. Collect data with
-            enterprise-grade privacy via Seal encryption, stored immutably on
-            the Walrus Protocol.
+            Create surveys, feedback forms, and submission flows with a familiar
+            drag-and-drop experience. Responses stay portable, transparent, and
+            built for the next generation of the web.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
@@ -40,7 +40,8 @@ export default function LandingPage() {
               href="/dashboard"
               className="w-full sm:w-auto bg-background text-foreground px-8 py-4 rounded-xl text-lg font-bold hover:bg-muted active:scale-95 transition-all flex items-center justify-center gap-2"
             >
-              Start Building Free <ArrowRight size={20} />
+              Start Building
+              <ArrowRight size={20} />
             </Link>
             <Link
               href="/docs"
@@ -57,11 +58,11 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="font-heading text-4xl sm:text-5xl font-bold mb-4">
-              Infrastructure, not just a tool.
+              Built for modern data collection.
             </h2>
             <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-              We eliminated the middleman. Your data is stored directly on
-              decentralized networks, ensuring absolute censorship resistance.
+              TrestoForm combines a familiar builder experience with portable
+              storage, wallet-native access, and flexible privacy controls.
             </p>
           </div>
 
@@ -71,10 +72,10 @@ export default function LandingPage() {
               <div className="w-14 h-14 bg-primary text-primary-foreground flex items-center justify-center rounded-xl mb-6">
                 <ShieldCheck size={28} />
               </div>
-              <h3 className="text-xl font-bold mb-3">Client-Side Encryption</h3>
+              <h3 className="text-xl font-bold mb-3">Privacy Controls</h3>
               <p className="text-muted-foreground leading-relaxed">
-                Sensitive fields are encrypted in the browser using the Seal
-                protocol before transmission. Only you hold the decryption keys.
+                Protect sensitive responses with optional encryption and
+                controlled access for your team or community.
               </p>
             </div>
 
@@ -114,7 +115,7 @@ export default function LandingPage() {
           <div className="flex flex-col md:flex-row items-center justify-between gap-12">
             <div className="flex-1">
               <h2 className="font-heading text-4xl font-bold mb-6 text-foreground">
-                A workflow you already know.
+                Simple to build. Easy to share.
               </h2>
               <ul className="space-y-6">
                 <li className="flex gap-4 items-start">
@@ -123,11 +124,11 @@ export default function LandingPage() {
                   </div>
                   <div>
                     <h4 className="text-lg font-bold text-foreground">
-                      Design your Schema
+                      Build your form
                     </h4>
                     <p className="text-muted-foreground mt-1">
-                      Use our drag-and-drop builder to craft your questions and
-                      mark fields as encrypted.
+                      Create surveys, applications, feedback forms, or internal
+                      workflows using a flexible drag-and-drop builder.
                     </p>
                   </div>
                 </li>
@@ -137,11 +138,11 @@ export default function LandingPage() {
                   </div>
                   <div>
                     <h4 className="text-lg font-bold text-foreground">
-                      Deploy to the Network
+                      Publish instantly
                     </h4>
                     <p className="text-muted-foreground mt-1">
-                      Generate a public link. Your form logic is immutable and
-                      hosted entirely on-chain.
+                      Share your form with a public link and start collecting
+                      responses in minutes.
                     </p>
                   </div>
                 </li>
@@ -151,11 +152,11 @@ export default function LandingPage() {
                   </div>
                   <div>
                     <h4 className="text-lg font-bold text-foreground">
-                      Analyze & Decrypt
+                      Review responses
                     </h4>
                     <p className="text-muted-foreground mt-1">
-                      Connect your wallet to the dashboard to safely decrypt and
-                      download your responses.
+                      Manage submissions, review responses, and securely access
+                      protected data from your dashboard.
                     </p>
                   </div>
                 </li>

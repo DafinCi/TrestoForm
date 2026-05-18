@@ -24,7 +24,7 @@ export default function DocsPage() {
               Documentation
             </h1>
             <p className="text-muted-foreground mt-2">
-              Everything you need to build on TrestoForm.
+              Learn how to create, publish, and manage forms with TrestoForm.
             </p>
           </div>
         </div>
@@ -37,9 +37,8 @@ export default function DocsPage() {
               <span className="text-primary">#</span> Getting Started
             </h2>
             <p className="text-muted-foreground leading-relaxed">
-              TrestoForm requires a Web3 wallet (like Sui Wallet) to manage your
-              cryptographic keys and interact with the decentralized network. To
-              create your first form:
+              TrestoForm uses wallet-based authentication to help secure your
+              forms and manage access to protected submissions.
             </p>
             <ol className="list-decimal list-inside text-muted-foreground space-y-2 bg-card border-2 border-border p-6 rounded-2xl">
               <li>
@@ -70,7 +69,11 @@ export default function DocsPage() {
               the network.
             </p>
             <div className="bg-muted p-4 rounded-xl font-mono text-sm text-foreground border border-border/50">
-              <p className="text-muted-foreground mb-2">// Flow of data</p>
+              <p className="text-muted-foreground mb-2">
+                Encrypted fields help protect sensitive information such as
+                emails, phone numbers, and internal responses.
+              </p>
+              <p className="text-muted-foreground mb-2">Flow of data</p>
               <p>1. User Input -{">"} Browser Memory</p>
               <p>2. Browser -{">"} Encrypts payload with Form's Public Key</p>
               <p>3. Encrypted Payload -{">"} Uploaded to Walrus Storage</p>
@@ -87,12 +90,10 @@ export default function DocsPage() {
               Network
             </h2>
             <p className="text-muted-foreground leading-relaxed">
-              Instead of an AWS database, responses are sharded and stored as
-              blobs on the <strong>Walrus Protocol</strong>. To ensure data
-              hasn't been tampered with, a cryptographic hash of the submission
-              is recorded permanently on the <strong>Sui Network</strong>. This
-              creates a verifiable audit trail that is publicly accessible but
-              unreadable without the decryption key.
+              TrestoForm stores submissions using decentralized storage
+              infrastructure powered by <strong>Walrus</strong> and the{" "}
+              <strong>Sui ecosystem</strong>, helping reduce dependency on
+              traditional centralized databases.
             </p>
             <div className="flex items-center gap-3 bg-card border-l-4 border-primary p-4 mt-4">
               <Terminal size={20} className="text-primary shrink-0" />

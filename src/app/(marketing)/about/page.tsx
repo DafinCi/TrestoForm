@@ -17,11 +17,12 @@ export default function AboutPage() {
         {/* Header Section */}
         <div className="mb-16">
           <h1 className="font-heading text-4xl sm:text-6xl font-bold text-foreground mb-6 tracking-tight">
-            The Manifesto for Decentralized Data.
+            Forms should be simple. Ownership should stay yours.
           </h1>
           <p className="text-lg sm:text-xl text-muted-foreground leading-relaxed">
-            For too long, we've surrendered our data to centralized tech giants
-            just to build simple forms. It's time to take control back.
+            TrestoForm was built to make form creation feel familiar while
+            giving communities, teams, and builders more control over how their
+            submissions are stored and accessed.
           </p>
         </div>
 

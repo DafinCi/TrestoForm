@@ -11,6 +11,7 @@ import { RetryableWalrusClientError } from "@mysten/walrus";
 import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
 import { getWalrusClient, resetWalrusClient } from "./client";
 import { WalrusError, WalrusUploadOptions, WalrusUploadResult } from "./schema";
+import { decodeSuiPrivateKey } from "@mysten/sui/cryptography";
 
 // -----------------------------------------------------------------------------
 // Signer
@@ -29,13 +30,20 @@ function getSigner(): Ed25519Keypair {
   const key = process.env.WALRUS_SIGNER_PRIVATE_KEY;
   if (!key) {
     throw new WalrusError(
-      "WALRUS_SIGNER_PRIVATE_KEY is not set. " +
-        "Create a funded testnet keypair and add it to .env.local.",
+      "WALRUS_SIGNER_PRIVATE_KEY is not set.",
       undefined,
       "SIGNER_MISSING",
     );
   }
+
   try {
+    // 1. Cek apakah formatnya dari wallet (diawali suiprivkey)
+    if (key.startsWith("suiprivkey")) {
+      const { secretKey } = decodeSuiPrivateKey(key);
+      return Ed25519Keypair.fromSecretKey(secretKey);
+    }
+
+    // 2. Kalau format lama (base64/hex)
     return Ed25519Keypair.fromSecretKey(key);
   } catch (err) {
     throw new WalrusError(

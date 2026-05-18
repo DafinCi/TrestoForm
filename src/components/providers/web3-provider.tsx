@@ -6,12 +6,9 @@ import {
   SuiClientProvider,
   WalletProvider,
 } from "@mysten/dapp-kit";
-// CARA TERBARU SUI SDK V2: Import dari jsonRpc, bukan dari client lagi
 import { getJsonRpcFullnodeUrl } from "@mysten/sui/jsonRpc";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import "@mysten/dapp-kit/dist/index.css";
-
-// Gunakan getJsonRpcFullnodeUrl sesuai standar dApp Kit untuk SDK >= 2.0.0
 const { networkConfig } = createNetworkConfig({
   localnet: { url: getJsonRpcFullnodeUrl("localnet") },
   testnet: { url: getJsonRpcFullnodeUrl("testnet") },

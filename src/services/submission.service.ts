@@ -4,104 +4,92 @@
 //
 // Flow:
 //   createSubmission()
-//     → validate input (Zod)
-//     → build WalrusSubmissionPayload
+//     → validate input (matching our new WalrusSubmissionPayload)
 //     → uploadJSON() → blobId
-//     → persist { submissionId, blobId, formId } in your DB
+//     → persist { blobId, formId, respondentAddress, serverSubmittedAt }
 //     → return SubmissionResult
-//
-// getSubmission()
-//     → lookup blobId in DB by submissionId
-//     → fetchSubmission(blobId) from Walrus
-//     → return typed payload
 // =============================================================================
 
 import { z } from "zod";
 import { uploadJSON, uploadFile } from "@/lib/walrus/upload";
 import { fetchSubmission } from "@/lib/walrus/fetch";
 import type {
-  WalrusSubmissionPayload,
   WalrusUploadResult,
   WalrusBlobMetadata,
 } from "@/lib/walrus/schema";
 import { WalrusError } from "@/lib/walrus/schema";
+import type {
+  WalrusSubmissionPayload,
+  SubmissionRecord,
+  SubmissionValue,
+  FileReference,
+} from "@/types/submissions";
 
 // -----------------------------------------------------------------------------
-// Input validation schemas
+// Input validation schemas (Aligned with src/types/submissions.ts)
 // -----------------------------------------------------------------------------
 
-/**
- * Zod schema for incoming form submission.
- * Extend / replace `fieldData` shape to match your actual form field types.
- */
-const SubmissionInputSchema = z.object({
-  formId: z.string().min(1, "formId is required"),
-  data: z.record(z.unknown()),
-  meta: z
-    .object({
-      userAgent: z.string().optional(),
-      ipAddress: z.string().optional(),
-      source: z.string().optional(),
-    })
-    .optional(),
+// Schema to validate FileReference object
+const FileReferenceSchema = z.object({
+  blobId: z.string(),
+  filename: z.string(),
+  mimeType: z.string(),
+  size: z.number(),
 });
 
-export type SubmissionInput = z.infer<typeof SubmissionInputSchema>;
+// Replicating the SubmissionValue union type in Zod
+const SubmissionValueSchema: z.ZodType<SubmissionValue> = z.union([
+  z.string(),
+  z.number(),
+  z.boolean(),
+  z.array(z.string()),
+  FileReferenceSchema,
+  z.array(FileReferenceSchema),
+  z.null(),
+]);
+
+/**
+ * Zod schema for incoming form submission payload from the frontend hook.
+ */
+const SubmissionPayloadSchema = z.object({
+  version: z.literal("1.0"),
+  formId: z.string().min(1, "formId is required"),
+  respondentAddress: z.string().nullable(),
+  answers: z.record(z.string(), SubmissionValueSchema),
+  clientSubmittedAt: z.number().optional(),
+});
 
 // -----------------------------------------------------------------------------
 // Result types
 // -----------------------------------------------------------------------------
 
 export interface SubmissionResult {
-  /** Your application-level submission ID (UUID). */
-  submissionId: string;
-  /** Walrus blob ID — store this in your DB. */
-  blobId: string;
-  uploadedAt: number;
-}
-
-export interface SubmissionRecord {
-  submissionId: string;
-  formId: string;
-  blobId: string;
-  uploadedAt: number;
-}
-
-// -----------------------------------------------------------------------------
-// Lightweight ID generator (replace with your preferred lib, e.g. nanoid/uuid)
-// -----------------------------------------------------------------------------
-
-function generateId(): string {
-  return (
-    Date.now().toString(36) + Math.random().toString(36).slice(2, 9)
-  ).toUpperCase();
+  blobId: string; // The primary ID
+  serverSubmittedAt: number;
 }
 
 // -----------------------------------------------------------------------------
 // DB adapter interface
-//
-// Replace the in-memory implementation below with your real DB adapter.
-// The service depends only on this interface — swap freely.
 // -----------------------------------------------------------------------------
 
 interface SubmissionRepository {
   save(record: SubmissionRecord): Promise<void>;
-  findById(submissionId: string): Promise<SubmissionRecord | null>;
+  findById(blobId: string): Promise<SubmissionRecord | null>;
   findByFormId(formId: string): Promise<SubmissionRecord[]>;
 }
 
 /**
  * ⚠️  In-memory stub — replace with Prisma / Drizzle / Supabase / etc.
- * Only the `blobId` and `submissionId` mapping needs to be persisted.
  */
 const inMemoryRepo: SubmissionRepository = (() => {
   const store = new Map<string, SubmissionRecord>();
   return {
     async save(record) {
-      store.set(record.submissionId, record);
+      // Using blobId as the primary key
+      store.set(record.blobId, record);
     },
-    async findById(id) {
-      return store.get(id) ?? null;
+    async findById(blobId) {
+      return store.get(blobId) ?? null;
     },
     async findByFormId(formId) {
       return [...store.values()].filter((r) => r.formId === formId);
@@ -109,58 +97,39 @@ const inMemoryRepo: SubmissionRepository = (() => {
   };
 })();
 
-// Export so callers can inject a real repo (e.g. in tests or DI)
 export let submissionRepo: SubmissionRepository = inMemoryRepo;
 export function setSubmissionRepo(repo: SubmissionRepository) {
   submissionRepo = repo;
 }
 
 // -----------------------------------------------------------------------------
-// Service: createSubmission
+// Service Methods
 // -----------------------------------------------------------------------------
 
 /**
  * Validates a form submission, uploads it to Walrus, and persists the record.
- *
- * @example
- * const result = await createSubmission({
- *   formId: "form_abc",
- *   data: { name: "Alice", message: "Great product!" },
- * });
- * // → { submissionId: "…", blobId: "…", uploadedAt: … }
  */
 export async function createSubmission(
-  input: SubmissionInput,
+  input: unknown,
 ): Promise<SubmissionResult> {
-  // 1. Validate input
-  const parsed = SubmissionInputSchema.safeParse(input);
+  // 1. Validate input against our strict Zod schema
+  const parsed = SubmissionPayloadSchema.safeParse(input);
   if (!parsed.success) {
     throw new Error(
-      `Invalid submission: ${parsed.error.issues
+      `Invalid submission payload: ${parsed.error.issues
         .map((i) => `${i.path.join(".")}: ${i.message}`)
         .join(", ")}`,
     );
   }
 
-  const { formId, data, meta } = parsed.data;
+  const payload = parsed.data;
 
-  // 2. Build canonical payload
-  const payload: WalrusSubmissionPayload = {
-    version: "1.0",
-    formId,
-    submittedAt: new Date().toISOString(),
-    data,
-    meta,
-  };
-
-  // 3. Upload to Walrus
+  // 2. Upload immutable JSON payload to Walrus
   let uploadResult: WalrusUploadResult;
   try {
     uploadResult = await uploadJSON(payload);
   } catch (err) {
-    if (err instanceof WalrusError) {
-      throw err; // propagate typed error
-    }
+    if (err instanceof WalrusError) throw err;
     throw new WalrusError(
       "Unexpected error during Walrus upload.",
       err,
@@ -168,78 +137,62 @@ export async function createSubmission(
     );
   }
 
-  // 4. Persist the record (submissionId ↔ blobId mapping)
-  const submissionId = generateId();
+  const serverSubmittedAt = Date.now();
+
+  // 3. Persist the record (blobId is the PK)
   await submissionRepo.save({
-    submissionId,
-    formId,
     blobId: uploadResult.blobId,
-    uploadedAt: uploadResult.uploadedAt,
+    formId: payload.formId,
+    respondentAddress: payload.respondentAddress,
+    serverSubmittedAt: serverSubmittedAt,
   });
 
-  // 5. Return
+  // 4. Return the result
   return {
-    submissionId,
     blobId: uploadResult.blobId,
-    uploadedAt: uploadResult.uploadedAt,
+    serverSubmittedAt,
   };
 }
 
-// -----------------------------------------------------------------------------
-// Service: getSubmission
-// -----------------------------------------------------------------------------
-
 /**
- * Retrieves the full submission payload from Walrus by submissionId.
- *
- * @example
- * const { data } = await getSubmission("ABCD1234");
- * console.log(data.formId, data.data);
+ * Retrieves the full submission payload from Walrus by its blobId.
  */
-export async function getSubmission<T = Record<string, unknown>>(
-  submissionId: string,
-): Promise<WalrusSubmissionPayload<T>> {
-  const record = await submissionRepo.findById(submissionId);
+export async function getSubmission(
+  blobId: string,
+): Promise<WalrusSubmissionPayload> {
+  const record = await submissionRepo.findById(blobId);
   if (!record) {
-    throw new Error(`Submission "${submissionId}" not found.`);
+    throw new Error(
+      `Submission record for blob "${blobId}" not found in database.`,
+    );
   }
 
-  const { data } = await fetchSubmission<T>(record.blobId);
+  const { data } = await fetchSubmission<WalrusSubmissionPayload>(blobId);
   return data;
 }
 
-// -----------------------------------------------------------------------------
-// Service: getSubmissionsByForm
-// -----------------------------------------------------------------------------
-
 /**
  * Retrieves all submission payloads for a given form.
- * Fetches in parallel from Walrus — suitable for admin review dashboards.
- *
- * @example
- * const submissions = await getSubmissionsByForm("form_abc");
  */
-export async function getSubmissionsByForm<T = Record<string, unknown>>(
+export async function getSubmissionsByForm(
   formId: string,
-): Promise<Array<WalrusSubmissionPayload<T> & { submissionId: string }>> {
+): Promise<Array<WalrusSubmissionPayload>> {
   const records = await submissionRepo.findByFormId(formId);
 
   const settled = await Promise.allSettled(
     records.map(async (r) => {
-      const { data } = await fetchSubmission<T>(r.blobId);
-      return { ...data, submissionId: r.submissionId };
+      const { data } = await fetchSubmission<WalrusSubmissionPayload>(r.blobId);
+      return data;
     }),
   );
 
-  const results: Array<WalrusSubmissionPayload<T> & { submissionId: string }> =
-    [];
+  const results: Array<WalrusSubmissionPayload> = [];
   for (const outcome of settled) {
     if (outcome.status === "fulfilled") {
       results.push(outcome.value);
     } else {
-      // Log but don't throw — partial results are better than a full failure
       console.error(
-        "[submission.service] Failed to fetch submission:",
+        "[submission.service] Failed to fetch submission from Walrus:",
         outcome.reason,
       );
     }
@@ -248,17 +201,8 @@ export async function getSubmissionsByForm<T = Record<string, unknown>>(
   return results;
 }
 
-// -----------------------------------------------------------------------------
-// Service: uploadAttachment
-// -----------------------------------------------------------------------------
-
 /**
- * Uploads a media/file attachment to Walrus and returns its blobId.
- * Store the blobId alongside your form submission data.
- *
- * @example
- * const { blobId } = await uploadAttachment(buffer);
- * // Include blobId in your submission data field
+ * Uploads a media/file attachment to Walrus and returns its metadata.
  */
 export async function uploadAttachment(
   data: Uint8Array | Buffer | ArrayBuffer,
