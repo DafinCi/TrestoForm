@@ -1,7 +1,7 @@
 // =============================================================================
 // src/app/api/forms/[formId]/submissions/route.ts
 //
-// Endpoint Endpoint Utama untuk Form Submission.
+// Endpoint Utama untuk Form Submission.
 // Menerima payload JSON dari frontend, memanggil service untuk validasi & upload
 // ke Walrus, dan mengembalikan `blobId` sebagai resi keberhasilan.
 // =============================================================================
@@ -10,15 +10,17 @@ import { NextRequest, NextResponse } from "next/server";
 import { createSubmission } from "@/services/submission.service";
 import { WalrusError } from "@/lib/walrus/schema";
 
+// PERBAIKAN 1: Bungkus params dengan Promise agar sesuai dengan standar Next.js 15
 interface RouteContext {
-  params: {
+  params: Promise<{
     formId: string;
-  };
+  }>;
 }
 
 export async function POST(req: NextRequest, context: RouteContext) {
   try {
-    const { formId } = context.params;
+    // PERBAIKAN 2: Tambahkan kata kunci 'await' sebelum membaca context.params
+    const { formId } = await context.params;
 
     if (!formId) {
       return NextResponse.json(
