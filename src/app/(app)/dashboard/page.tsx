@@ -5,7 +5,8 @@
 
 import React from "react";
 import Link from "next/link";
-import { redirect } from "next/navigation";
+// redirect tidak di-import lagi karena proteksinya kita hapus sementara
+
 import {
   Plus,
   FileText,
@@ -22,6 +23,21 @@ import { verifySession } from "@/lib/auth/session";
 import { getDashboardOverview } from "@/services/analytics.service";
 
 export default async function DashboardPage() {
+  // 1. Cek Web3 Session (Bisa null jika belum login)
+  const session = await verifySession();
+
+  // Proteksi Halaman (REDIRECT DIHAPUS)
+  // if (!session?.address) {
+  //   redirect("/");
+  // }
+
+  // 2. Tarik data overview dari backend (Zero Network Waterfall)
+  // Kita tambahkan optional chaining (?.) dan fallback string kosong
+  // supaya tidak error 'cannot read properties of null' saat belum login.
+  const { stats, recentForms } = await getDashboardOverview(
+    session?.address || "",
+  );
+
   // Mapping ikon dinamis untuk array stats
   const icons = [FileText, Users, Database, ShieldCheck];
   const colors = [
