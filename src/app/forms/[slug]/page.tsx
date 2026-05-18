@@ -8,12 +8,14 @@ import { ShieldCheck } from "lucide-react";
 import { getFormSchema } from "@/services/form.service";
 import { notFound } from "next/navigation";
 
-export default async function PublicFormPage({
-  params,
-}: {
-  params: { slug: string };
-}) {
-  const formId = params.slug;
+// 1. FIX NEXT.JS 16: Jadikan params sebagai Promise
+interface PublicFormPageProps {
+  params: Promise<{ slug: string }>;
+}
+
+export default async function PublicFormPage({ params }: PublicFormPageProps) {
+  // 2. FIX NEXT.JS 16: Await params sebelum dipakai
+  const { slug: formId } = await params;
 
   let formSchema;
   try {
@@ -28,6 +30,9 @@ export default async function PublicFormPage({
   if (!formSchema || !formSchema.fields) {
     notFound();
   }
+
+  // 3. (Opsional tapi aman) Fallback empty settings jika di schema tidak ada settings
+  const formSettings = formSchema.settings || {};
 
   return (
     <div className="min-h-screen bg-background relative flex flex-col items-center justify-start pt-10 sm:pt-20 pb-24 px-4 sm:px-6 overflow-hidden font-sans">
@@ -55,7 +60,12 @@ export default async function PublicFormPage({
           </div>
 
           {/* Render Komponen Interaktif Client-Side (React Hook Form) */}
-          <PublicForm fields={formSchema.fields} formId={formId} />
+          {/* 4. FIX TYPESCRIPT: Tambahkan props `settings` ke sini */}
+          <PublicForm
+            fields={formSchema.fields}
+            formId={formId}
+            settings={formSettings}
+          />
         </div>
 
         {/* Trust Badge / Security Note */}
